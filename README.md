@@ -20,6 +20,6 @@ Users can access the vignette:
 
 ``` r
 library(MSIMST)
-vignette(package = "MSIMST")
+vignette("MSIMST_vignette",package = "MSIMST")
 ```
 
