@@ -1,0 +1,941 @@
+---
+title: "Robust Statistical Modeling for Quantifying Periodontal Disease: A Single Index Mixed-Effects Approach with Skewed Random Effects and Heavy-Tailed Residuals"
+output: 
+  bookdown::pdf_document2:
+    toc_depth: 5
+    extra_dependencies: 
+      hyperref: ["unicode=true", "breaklinks=true"]
+bibliography: ref.bib
+header-includes:
+  - \usepackage{natbib}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Introduction
+
+## The ST-GP Model
+
+We propose a single index model with skewed random effects and heavy-tailed residuals. We refer to this model as the ST-GP model because the random effects and residuals jointly follow the ST distribution, and we apply the constrained Gaussian process (GP) prior from \citet{Maatouk2017} on the index function.
+
+Let $\mathbf{Y}_{i}^{P} = \left(Y^{P}_{i,1},Y^{P}_{i,2},\dots,Y^{P}_{i,n_i}\right)^{\top}$ and $\mathbf{Y}_{i}^{C} = \left(Y^{C}_{i,1},Y^{C}_{i,2},\dots,Y^{C}_{i,n_i}\right)^{\top}$ be the measurements of PD and CAL (in millimeter) for subject $i = 1,\dots, N$. Here $n_i$ denotes the number of teeth accounted for within the mouth for $i$-th subject. At the subject level, we propose a single index model with skewed random effects and heavy-tailed residuals as:
+\begin{equation}
+	\mathbf{Y}_i=\left(\begin{array}{c}
+		\mathbf{Y}_i^P \\
+		\mathbf{Y}_i^C
+	\end{array}\right)=\left(\begin{array}{c}
+		g\left(\mathbf{X}_i \boldsymbol{\beta}\right) \\
+		%%a = \beta_b in the previous manuscript%%
+		a \times g\left(\mathbf{X}_i \boldsymbol{\beta}\right)
+	\end{array}\right)+\left(\begin{array}{c}
+		\boldsymbol{1}_{n_i} \\
+		\boldsymbol{1}_{n_i}
+	\end{array}\right) b_i+\left(\begin{array}{c}
+		\boldsymbol{\epsilon}_i^P \\
+		\boldsymbol{\epsilon}_i^C
+	\end{array}\right),
+	\label{eq:ST-GP_model}
+\end{equation}
+with 
+\begin{equation*}
+	g\left(\mathbf{X}_i \boldsymbol{\beta}\right)=\left(\begin{array}{c}
+		g^{\star}\left(\mathbf{X}_i^{(1)} \boldsymbol{\beta}\right) \\
+		\vdots \\
+		g^{\star}\left(\mathbf{X}_i^{\left(n_i\right)} \boldsymbol{\beta}\right)
+	\end{array}\right),
+\end{equation*}
+where $\mathbf{X}_i^{(1)}$ and $\mathbf{X}_i^{\left(n_i\right)}$ represent the first and last row of $\mathbf{X}_i$, respectively. The slope parameter $a \in (-\infty,\infty)$ differentiates the fixed effects between PD and CAL, motivated by their observed correlation. The function $g^{\star}(\cdot)$ is assumed to be a continuous monotonic increasing function on its support $[-1,1]$, with the constraint that $g^{\star}(-1) = 0$. For the identifiability concern, the $L_2$ norm of $\boldsymbol{\beta}$ must be 1.  As the support of $g^{\star}(\cdot)$ is defined $[-1,1]$, one need to scale $\mathbf{X}_i$ such that each row of $\mathbf{X}_i$ has $L_2$ norm no larger than 1.
+
+The distributional assumption for the random effects and errors is expressed as follows:
+\begin{equation}
+	\left(\begin{array}{c}
+		b_i \\
+		\boldsymbol{\epsilon}_i
+	\end{array}\right) \sim \operatorname{ST}_{2n_i+1}\left[\left(\begin{array}{c}
+		h(\nu) \delta \\
+		\boldsymbol{0}_{2n_i}
+	\end{array}\right),\left(\begin{array}{cc}
+		d^2 & \boldsymbol{0}_{2n_i}^{\top} \\
+		\boldsymbol{0}_{2n_i} & \sigma^2 \mathbf{I}_{2n_i}
+	\end{array}\right),\left(\begin{array}{c}
+		\delta \\
+		\boldsymbol{0}_{2n_i}
+	\end{array}\right), \nu\right],
+	\label{eq:single_index_model_distributional_assumption}
+\end{equation}
+where
+$$\boldsymbol{\epsilon}_{i} = 
+\left(\begin{array}{l}
+	\boldsymbol{\epsilon}_i^P \\
+	\boldsymbol{\epsilon}_i^C
+\end{array}\right),$$
+$$h(\nu) = -\sqrt{\nu / \pi} \Gamma \left(0.5 \nu - 0.5\right) / \Gamma\left(0.5 \nu\right),$$ 
+$\Gamma\left(\cdot\right)$ represents the Gamma function, $d^2$ and $\sigma^2$ represent the conditional variance of the random effects and residuals, respectively, $\delta \in (-\infty,\infty)$ is the skewness parameter, and $\nu$ is the degree of freedom. Definitions and properties of the ST distribution are discussed in Appendix \ref{sec:skewed_distributions}. If one applies the constrained GP prior on the index function $g$, then the model described in \eqref{eq:ST-GP_model} and \eqref{eq:single_index_model_distributional_assumption} is referred to as the ST-GP model. 
+
+Additionally, using Proposition 5 of \citet{schumacher2021canonical}, we have
+\begin{equation}
+	\mathbf{Y}_i \sim \operatorname{ST}_{2n_{i}}\left(\boldsymbol{\theta}_i+ h(\nu) \delta \boldsymbol{1}_{2n_{i}}, \boldsymbol{\Psi}_i, \delta \boldsymbol{1}_{2n_{i}}, \nu\right),
+\label{eq:mariginal_distribution}
+\end{equation}
+where
+$$
+\boldsymbol{\theta}_i = 
+\left(\begin{array}{c}
+	g\left(\mathbf{X}_i \boldsymbol{\beta}\right) \\
+	a \times g\left(\mathbf{X}_i \boldsymbol{\beta}\right)
+\end{array}\right)
+$$
+and
+$$\boldsymbol{\Psi}_i = d^2 \boldsymbol{1}_{2n_{i}} \boldsymbol{1}^{\top}_{2n_i} + \sigma^2 \mathbf{I}_{2n_i \times 2n_i}$$ 
+represents a covariance matrix characterized by a compound symmetry structure, with readily available closed-form expressions for its inverse and determinant.
+
+Last, the model in \eqref{eq:ST-GP_model} and \eqref{eq:single_index_model_distributional_assumption} has a hierarchical representation that facilities an associated Gibbs sampler. The details of the hierarchical representation and the associated Gibbs sampler can be found in Appendix \ref{sec:the_hierarchical_representation} and \ref{sec:Gibbs}, respectively.
+
+## The Constrained GP Prior
+
+To apply the constrained GP prior, we need to add one more assumption on $g^{\star}(\cdot)$. The support of $g^{\star}(\cdot)$ is restricted to $[-1, 1]$. Furthermore, grounded in our observation that utilizing a random intercept alone is adequate for the analysis of the real data, we add one more condition: $g^{\star}(-1) = 0$. This condition aligns with the reality of periodontal disease research, where the readings of PD and CAL must be non-negative. Therefore, assuming that the single index function is non-negative is reasonable. We summarize the assumption imposed on $g^{\star}(x)$ as follows: $g^{\star}(x)$ is defined as a continuous, monotonic increasing function on its support $[-1, 1]$, with the minimal value defined as $g^{\star}(-1) = 0$.
+
+With these assumptions in place, we can now proceed to introduce the associated basis functions, $h_{k}\left(\cdot\right)$ and $\phi_{k}\left(\cdot\right)$, associated with the constrained GP prior. For given knots $-1 = u_{0} < u_{1} < \dots < u_{L} = 1$, continuous piecewise linear functions are defined as, for $k = 1,\dots,L,$
+$$
+h_{k}(x)= \begin{cases}0 & \text { if } x>u_{k+1} \text { or } x<u_{k-1} \\ 1 & \text { if } x=u_k \\ \text { linear } & \text { otherwise }\end{cases}.
+$$
+Taking integration of $h_{k}\left(x\right)$ on $(-1,x)$, we define $\psi_{k}\left(\cdot\right)$ as
+$$
+\psi_{k}(x)=\int_{-1}^x h_{k}(t) d t.
+$$
+Next, we define $\phi_{k}\left(\mathbf{X}_{i} \boldsymbol{\beta}\right)$ as a vector-valued function consisting of $n_{i}$ continuous piecewise linear functions:
+$$
+\phi_{k}\left(\mathbf{X}_{i} \boldsymbol{\beta}\right) = 
+\begin{pmatrix}
+	\psi_{k} \left(\mathbf{X}_{i}^{(1)} \boldsymbol{\beta}\right) \\
+	\vdots \\
+	\psi_{k} \left(\mathbf{X}_{i}^{(n_{i})} \boldsymbol{\beta}\right) \\
+\end{pmatrix}.
+$$
+Finally, we can define the constrained GP prior and the index function as follows:
+\begin{equation}
+	g\left(\mathbf{X}_{i} \boldsymbol{\beta}\right)= \boldsymbol{\Phi} \boldsymbol{\xi},
+	\label{eq:constrained_Gaussian_process_index_function}
+\end{equation}
+where $\boldsymbol{\Phi}$ is a $n_{i} \times (L + 1)$ matrix:
+$$
+\begin{aligned}
+	\boldsymbol{\Phi} &= 
+	\begin{pmatrix}
+		\phi_{0} \left(\mathbf{X}_{i} \boldsymbol{\beta} \right) & \cdots & \phi_{L} \left(\mathbf{X}_{i} \boldsymbol{\beta} \right)
+	\end{pmatrix} \\
+	&=
+	\begin{pmatrix}
+		\psi_{0} \left(\mathbf{X}^{(1)}_{i} \boldsymbol{\beta}\right) & \cdots & \psi_{L} \left(\mathbf{X}^{(1)}_{i} \boldsymbol{\beta}\right) \\
+		\vdots & \ddots & \vdots \\
+		\psi_{0} \left(\mathbf{X}^{(n_{i})}_{i} \boldsymbol{\beta}\right) & \cdots & \psi_{L} \left(\mathbf{X}^{(n_{i})}_{i} \boldsymbol{\beta}\right)
+	\end{pmatrix},
+\end{aligned}
+$$
+and the random vector $\boldsymbol{\xi} = \left[\xi_{0},\dots,\xi_{L}\right]^{\top}$ is positive and follows a truncated multivariate normal distribution:
+$$
+\boldsymbol{\xi} \sim \mathcal{N}_{L+1}^{+} \left(\boldsymbol{0}_{L+1}, \boldsymbol{K}\right),
+$$
+representing the constrained GP prior on $\boldsymbol{\xi}$.
+
+With the vector-valued input, $\mathbf{X}_{i} \boldsymbol{\beta}$, the index function $g\left(\cdot\right)$ is a function with vector-valued output. It is a collection of scalar-valued monotonic increasing functions:
+$$
+g\left(\mathbf{X}_{i}\boldsymbol{\beta}\right) = 
+\begin{pmatrix}
+	g^{\star}\left(\mathbf{X}_{i}^{(1)}\boldsymbol{\beta}\right) \\
+	\vdots \\
+	g^{\star}\left(\mathbf{X}_{i}^{(n_{i})}\boldsymbol{\beta}\right)
+\end{pmatrix}
+= 
+\begin{pmatrix}
+	\boldsymbol{\Phi}^{(1)} \boldsymbol{\xi}\\
+	\vdots \\
+	\boldsymbol{\Phi}^{(n_{i})} \boldsymbol{\xi}
+\end{pmatrix},
+$$
+where $g^{\star} \left(\cdot\right)$ is a function with both scalar-valued input and output, and $\boldsymbol{\Phi}^{(1)}$ and $\boldsymbol{\Phi}^{(n_{i})}$ represent the first and last row of $\boldsymbol{\Phi}$, respectively.
+
+By Proposition 2 of \citet{Maatouk2017}, setting $\boldsymbol{\xi}$ as a positive random vector is both a \emph{necessary and sufficient} condition for $g^{\star}\left(\cdot\right)$ to be a monotonic increasing function and for the index function $g(\cdot)$ in \eqref{eq:constrained_Gaussian_process_index_function} to be coordinate-wise monotonic increasing. 
+
+The covariance matrix $\boldsymbol{K}$ is characterized by the Matérn kernel \citep{Rasmussen2004}, consisting of a scale parameter $\rho_{1}$, a range parameter $\rho_{2}$, and a smoothness parameter $\rho_{3}$, defined as follows:
+$$
+C(r)=\rho_{1}^2 \frac{2^{1-\rho_{3}}}{\Gamma(\rho_{3})}\left(\sqrt{2 \rho_{3}} \frac{r}{\rho_{2}}\right)^{\rho_{3}} B_{\rho_{3}}\left(\sqrt{2 {\rho_{3}}} \frac{r}{\rho_{2}}\right),
+$$
+where $r$ represents the distance between two measurements, $\Gamma\left(\cdot\right)$ denotes the gamma function, and $B_{\rho_3}\left(\cdot\right)$ is the modified Bessel function of the second kind. Inference about the smoothness parameter $\rho_{3}$ is challenging both theoretically and empirically \citep{zhang2004inconsistent}. Additionally, $\rho_{3}$ is set to $3/2$ due to the simplified analytic form of the modified Bessel function of the second kind\citep{chen2024identifiability}. Furthermore, following the suggestion by \citet{ray2020efficient}, we assume that the covariance matrix $\boldsymbol{K}$ is obtained from a regular grid in the interval $[-1,1]$, which matches the support of the index function. This results in $\boldsymbol{K}$ having a Toeplitz structure, for which there exists an associated efficient sampling algorithm.
+
+## Variable Selection and Prior Elicitation \label{sec:Prior_Elicitation}
+
+In this section, we aim to address one challenging aspect in analyzing the NHANES data: the relatively high number of risk factors. We also want to discuss the prior elicitation for unknown parameters $\left(a, \boldsymbol{\beta}, \delta, d^{2}, \sigma^{2}, \nu, \rho^{2}_{1}, \rho_{2}\right)$ in the ST-GP model. We suggest the following list of priors:
+\begin{enumerate}
+	
+	\item We put a non-informative prior, a normal distribution with mean 0 and variance 1000, on the slope parameter $a$: 
+	$$a \sim \mathcal{N}\left(0,1000\right).$$
+	
+	\item Recall that there is an identifiability restriction such that $||\boldsymbol{\beta}|| = 1$. To satisfy this restriction, the following transformation can be applied:
+	$$
+	\boldsymbol{\beta} = \frac{\Tilde{\boldsymbol{\beta}}}{||\Tilde{\boldsymbol{\beta}}||}.
+	$$
+	This transformation addresses the identifiability concern and allows for the use of the elliptical slice sampler \citep{murray2010elliptical}, which is a tuning-free sampler. Traditional samplers used in existing Bayesian single index models often require careful tuning. In contrast, a tuning-free sampler simplifies the tuning process and enhances computational stability compared to samplers that require careful tuning.
+	
+	When the number of covariates is small, we suggest placing independent normal priors with mean 0 and variance 10 on each of $\Tilde{\boldsymbol{\beta}}$. Because, for any $c > 0$, $\Tilde{\boldsymbol{\beta}} / ||\Tilde{\boldsymbol{\beta}}|| = c\Tilde{\boldsymbol{\beta}} / ||c\Tilde{\boldsymbol{\beta}}||$, scaling the variance of the prior on $\Tilde{\boldsymbol{\beta}}$ does not alter the prior distribution of $\boldsymbol{\beta}$. 
+	
+	\item We put the grouped horseshoe prior on $\Tilde{\boldsymbol{\beta}}^{\star} = \left\{\Tilde{\beta}^{\star}_{j,k}: j \ge 1, k \ge 1\right\}$, such that for the $j$-th group and the $k$-th level,
+	\begin{equation}
+		\begin{aligned}
+			\Tilde{\beta}^{\star}_{j,k} \mid \lambda_{j}, \tau &\sim \mathcal{N}\left(0,\lambda^{2}_{j} \tau^{2}\right), \\
+			\lambda_{j} &\sim \mathcal{C}^{0,\infty} \left(0,1\right), \\
+			\tau &\sim \mathcal{C}^{0,1} \left(0,1\right), \\
+		\end{aligned}
+		\label{eq:grouped_horseshoe_prior}
+	\end{equation}
+	where $\mathcal{C}^{0,\infty} \left(0,1\right)$ and $\mathcal{C}^{0,1} \left(0,1\right)$ represent the standard Cauchy distribution truncated to $\left(0,\infty\right)$ and the standard Cauchy distribution truncated to $\left(0,1\right)$ respectively.
+	
+	Last, for other data sets or for researchers who want to investigate different questions, it is advisable for researchers to determine the usage of the normal prior and the (grouped) horseshoe prior based on the specific requirements and characteristics of their data and research objectives.
+	
+	\item We assign a non-informative prior to the skewness parameter $\delta$, allowing the data to fully determine both the direction and magnitude of the skewness of the random effects: $$\delta \sim \mathcal{N}(0, 1000).$$
+	
+	\item We assign a commonly used non-informative and conjugate prior, a inverse Gamma distribution, on the variance of random effects, $d^{2}$:
+	$$
+	d^{2} \sim \mathcal{IG} \left(5,5\right),
+	$$
+	where $\mathcal{IG}(5, 5)$ denotes the inverse Gamma distribution with shape and scale parameters set to 5, characterized by the probability density function proportional to $x^{-5-1}\exp(-5/x)$.
+	
+	\item We assign the same non-informative and conjugate prior, $\mathcal{IG}(5, 5)$, on the variance of the residual term, $\sigma^{2}$:
+	$$
+	\sigma^{2} \sim \mathcal{IG} \left(5,5\right).
+	$$
+	
+	\item To utilize the elliptical slice sampler, we place a log-normal prior on the degree of freedom:
+	$$
+	\log(\nu - 2) \sim \mathcal{N}(0, 1).
+	$$
+	This prior implies a lower bound such that $\nu > 2$, ensuring the existence of the first and second moments of the random effects and residuals.
+	
+	\item Similarly, for convenient use of the elliptical slice sampler, we assign the same log-normal prior on $\rho^{2}_{1}$ and $\rho_{2}$, two hyperparameters of the Matérn kernel: 
+	$$
+	\log\left(\rho^{2}_{1}\right) \sim \mathcal{N}(0, 1),
+	$$
+	and
+	$$
+	\log\left(\rho_{2}\right) \sim \mathcal{N}(0, 1).
+	$$
+	
+\end{enumerate}
+
+# First Simulation Study
+
+In this simulation study, we aim to demonstrate the data generation function `reg_simulation1` and the Gibbs sampling function `Gibbs_Sampler`. 
+
+The data generation stage of the simulation study involves several key steps. The function `reg_simulation1` iterates over $N$ subjects to generate design matrices $\mathbf{X}_{i}$ and outcomes $\mathbf{Y}_{i}$. For each subject, we replicate the non-uniform number of measurements observed in real data by setting $n_{i} = T + 2$, where $T$ follows a Poisson distribution with a mean of $8$. Each subject's data includes an associated $n_{i} \times 10$ design matrix $\mathbf{X}_{i}$. It then creates the design matrix $\mathbf{X}_{i}$ with two continuous predictors (`X1` and `X2`) and one binary predictor (`Zi`).
+
+To generate `X1`, it draws values from a standard normal distribution. For `X2`, it first determines the value of the binary predictor `Zi` by drawing from a binomial distribution with a probability of 0.5. If `Zi` is 1, it draws values for `X2` from a normal distribution with a mean of 1; if `Zi` is 0, it draws values from a normal distribution with a mean of -1. The resulting design matrix $\mathbf{X}_{i}$ is standardized and scaled.
+
+Next, the function calculates the linear predictor `etai` using the standardized $\mathbf{X}_{i}$. Then, it transforms `etai` using the `true.g` function, which is defined mathematically as:
+
+$$g(x) = 5 \left( \Phi\left(\frac{x+1}{2}; 0.5, 0.1\right) - \Phi\left(0; 0.5, 0.1\right) \right).$$
+
+where $\Phi(\cdot; \mu, \sigma)$ is the cumulative distribution function of the normal distribution with mean $\mu$ and standard deviation $\sigma$. This transformation provides the outcome $g_{i}$.
+
+Finally, the function generates the outcome $\mathbf{Y}_{i}$ from \eqref{eq:mariginal_distribution}. The standardized design matrices and outcomes are then stored.
+
+## Simulate Data
+
+```{r setup}
+# load the package
+library(MSIMST)
+```
+
+```{r simu1, eval = TRUE}
+set.seed(100)
+
+simulated_data <- reg_simulation1(N = 50,
+                                  ni_lambda = 8,
+                                  beta = c(0.5,0.5,0.5),
+                                  beta_b = 1.5,
+                                  dsq = 0.1,
+                                  sigmasq = 0.5,
+                                  delta = 0.6,
+                                  nu = 5.89)
+
+y <- simulated_data$y
+X <- simulated_data$X
+```
+
+## Use the Gibbs Sampler
+
+Users can use the `Gibbs_Sampler` function to draw samples from the posterior distribution.
+
+```{r simu1_sampling, eval = TRUE}
+group_info <- c(0,0,0)
+L <- 50
+N <- length(y)
+
+GP_MCMC_output <- Gibbs_Sampler(X = X,
+                                y = y,
+                                group_info = group_info,
+                                beta_value = c(0.5,0.5,0.5),
+                                beta_prior_variance = 10,
+                                beta_b_value = 1.5,
+                                beta_lambdasq_value = 1,
+                                beta_tausq_value = 1,
+                                xi_value = abs(rnorm(n = L + 1)),
+                                xi_lengthscale_value = 1.0,
+                                xi_tausq_value = 1.0,
+                                g_func_type = "GP",
+                                dsq_value = 1,
+                                sigmasq_value = 1,
+                                delta_value = 0.6,
+                                nu_value = 5.89,
+                                U_value = abs(rnorm(N)),
+                                S_value = abs(rnorm(N)),
+                                loglik_type = "skewT",
+                                gof_K = 10,
+                                gof_L = 5,
+                                iter_warmup = 2000,
+                                iter_sampling = 5000,
+                                verbatim = TRUE,
+                                update = 1000,
+                                incremental_output = FALSE,
+                                incremental_output_filename = NULL,
+                                incremental_output_update = 1e6,
+                                n_core = 1)
+```
+
+## Posterior Inference
+
+```{r simu1_post_inf, eval = TRUE}
+if (require(posterior)) {
+  require(posterior)
+  df_beta_GP <- GP_MCMC_output$beta_output
+  colnames(df_beta_GP) <- c("beta1","beta2","beta3")
+  summary(as_draws(df_beta_GP))
+}
+```
+
+## Plot the Estimated Single Index Function
+
+```{r simu1_SIM, eval = TRUE}
+L <- ncol(GP_MCMC_output$xi_output) - 1
+u <- seq(-1,1,length.out = L + 1)
+x.grid <- seq(-1,1,length.out = 1000)
+df_g_GP <- data.frame(x = x.grid,
+                      ymean = 0,
+                      ylb = 0,
+                      yub = 0)
+
+# true index values
+true_beta <- c(0.5,0.5,0.5) / norm(c(0.5,0.5,0.5), "2")
+index_values <- unlist(lapply(X, function(x){as.numeric(x %*% true_beta)}))
+
+# the true link function used in the simulation study
+true.g <- function(x){
+  y <- (x+1)/2
+  5*(pnorm(y, mean=0.5, sd=0.1) - pnorm(0, mean = 0.5, sd = 0.1))
+}
+
+# true values of the g function
+df_g_GP$true_y <- true.g(x.grid)
+
+GP_MSE <- mean((df_g_GP$ymean - df_g_GP$true_y)^2)
+
+if (require(lattice) & require(HDInterval) & require(latex2exp)) {
+  require(lattice)
+  require(HDInterval)
+  require(latex2exp)
+  
+  # the estimated g function - GP 
+  for (i in 1:length(x.grid)) {
+    # use phiX_c function to generate the Phi matrix defined in Equation (3)
+    phiX <- phiX_c(x.grid[i],u,L)
+    value <- as.numeric(phiX%*%t(GP_MCMC_output$xi_output))
+    value.mean <- mean(value)
+    value.ci <- hdi(value)
+    value.ub <- value.ci[2]
+    value.lb <- value.ci[1]
+    df_g_GP[i,"ymean"] <- value.mean
+    df_g_GP[i,"ylb"] <- value.lb
+    df_g_GP[i,"yub"] <- value.ub
+  }
+  
+  p1 <- xyplot(ymean + true_y ~ x, data = df_g_GP, 
+             type = "l",
+             lty = c(1,2),
+             lwd = c(3,3),
+             col = c("#0072B2","red"),
+             panel = function(...){
+               panel.xyplot(...)
+               panel.xyplot(x = index_values,
+                            y = rep(0,length(index_values)),
+                            col = rgb(0,158,115,255*0.1,maxColorValue = 255))
+               panel.polygon(c(df_g_GP$x, rev(df_g_GP$x)), 
+                             c(df_g_GP$yub, rev(df_g_GP$ylb)),
+                             col = rgb(0,114,178,255*0.3,maxColorValue = 255), 
+                             border = FALSE)
+             },
+             ylab = TeX("$g(U)$"),
+             xlab = TeX("$U$"),
+             key = list(space = "bottom",
+                        lines = list(lty=1:2, 
+                                     lwd=3,
+                                     col=c("#0072B2","red"),
+                                     points = FALSE),
+                        text = list(c(TeX("estimated $g(U)$ function"),
+                                      TeX("true $g(U)$ function")))
+             ),
+             main = TeX(paste0("GP prior on $g(U)$ function || ",
+                               "MSE = ",
+                               round(GP_MSE,2))),
+             ylim = c(-0.5,10))
+  plot(p1)
+}
+
+```
+
+# Second Simulation Study
+
+In the second simulation study, we aim to show that the grouped horseshoe prior in \eqref{eq:grouped_horseshoe_prior} efficiently separates noise from signals. We increase the number of covariates, with first covariate conforms to a categorical distribution with two levels, designated as A and B, each assigned a probability of 0.5. To emulate the prevalence of diabetes observed in actual datasets, the second covariate follows a categorical distribution with two levels: diabetes and non-diabetes, assigned probabilities of 0.13 and 0.87, respectively. To investigate the performance of the grouped horseshoe prior, it is essential to include a categorical covariate with more than two levels. Thus, the third covariate is generated from a categorical distribution with three levels, each having an equal probability of 1/3. The fourth covariate also adheres to a categorical distribution with two levels, C and D, each with a probability of 0.5. In mirroring potential correlations present in real data, if the fourth covariate assumes level C, the fifth covariate follows a normal distribution with a mean of 1 and a variance of 1; otherwise, it follows a normal distribution with a mean of -1 and the same variance. The first five covariates are associated with non-zero coefficients, whereas the remaining three covariates have coefficients assigned values of zero. The sixth covariate follows a categorical distribution with three levels, each with an equal probability of 1/3. Similarly, the seventh covariate follows a categorical distribution with two levels, each with an equal probability of 0.5. Analogous to the fifth covariate, the eighth covariate follows a normal distribution with a mean of 1 if the seventh covariate assumes the first level and a mean of -1 if it assumes the second level, both with a variance of 1. Lastly, we standardized the design matrix to ensure that the $L_{2}$ norm of each row of all $\mathbf{X}_{i}$ is less than 1.
+
+## Simulate Data
+
+```{r simu2, eval = TRUE}
+set.seed(200)
+simulated_data <- reg_simulation2(N = 50,
+                                  ni_lambda = 8,
+                                  beta = c(rep(1,6),rep(0,4)),
+                                  beta_b = 1.5,
+                                  dsq = 0.1,
+                                  sigmasq = 0.5,
+                                  delta = 0.6,
+                                  nu = 5.89)
+
+y <- simulated_data$y
+X <- simulated_data$X
+```
+
+## Use the Gibbs Sampler
+
+```{r simu2_sampling, eval = TRUE}
+group_info <- c(rep(0,2),
+                rep(1,2),
+                2,3,
+                rep(4,2),
+                5,6)
+L <- 50
+N <- length(y)
+
+GP_MCMC_output <- Gibbs_Sampler(X = X,
+                                y = y,
+                                group_info = group_info,
+                                beta_value = c(rep(1,6),rep(0,4)),
+                                beta_prior_variance = 10,
+                                beta_b_value = 1.5,
+                                beta_lambdasq_value = rep(1.0,max(group_info)),
+                                beta_tausq_value = 1,
+                                xi_value = abs(rnorm(n = L + 1)),
+                                xi_lengthscale_value = 1.0,
+                                xi_tausq_value = 1.0,
+                                g_func_type = "GP",
+                                dsq_value = 0.1,
+                                sigmasq_value = 0.5,
+                                delta_value = 0.6,
+                                nu_value = 5.89,
+                                U_value = abs(rnorm(N)),
+                                S_value = abs(rnorm(N)),
+                                loglik_type = "skewT",
+                                gof_K = 10,
+                                gof_L = 5,
+                                iter_warmup = 10000,
+                                iter_sampling = 10000,
+                                verbatim = TRUE,
+                                update = 5000,
+                                incremental_output = FALSE,
+                                incremental_output_filename = NULL,
+                                incremental_output_update = 1e6,
+                                n_core = 1)
+```
+
+## Posterior Inference
+
+```{r simu2_post_inf, eval = TRUE}
+if (require(posterior)) {
+  df_beta_GP <- GP_MCMC_output$beta_output
+  colnames(df_beta_GP) <- paste0("beta",1:10)
+  summary(as_draws(df_beta_GP))
+}
+```
+
+## Variable Selection Plot
+
+```{r simu2_VS_plot, eval = TRUE}
+if (require(posterior)) {
+  beta_draws <- as_draws(df_beta_GP)
+  df_plot_vs <- summarise_draws(beta_draws,
+                                mean,
+                                ~quantile(.x, probs = c(0.025, 1-0.025)))
+  df_plot_vs$variable <- factor(df_plot_vs$variable,
+                                levels = paste0("beta",1:10))
+}
+
+if (require(lattice) & require(latex2exp)) {
+  true_beta <- c(rep(1,6),rep(0,4)) / norm(c(rep(1,6),rep(0,4)), "2")
+  beta_label <- TeX(paste0("$\\beta_{",1:10,"}$"))
+  VS_plot <- xyplot(mean ~ variable, 
+                    data = df_plot_vs,
+                    panel = function(x,y,...) {
+                      panel.xyplot(x = x, y = y,...)
+                      panel.xyplot(x = 0:6, 
+                                   y = rep(true_beta[1],7),
+                                   type = "l",
+                                   col = "red",
+                                   lty = 2,
+                                   lwd = 3)
+                      panel.xyplot(x = 7:11, 
+                                   y = rep(0,5),
+                                   type = "l",
+                                   col = "red",
+                                   lty = 2,
+                                   lwd = 3)
+                      for (j in 1:10) {
+                        panel.arrows(x0 = j,
+                                     y0 = df_plot_vs$`2.5%`[j],
+                                     x1 = j,
+                                     y1 = df_plot_vs$`97.5%`[j],
+                                     length = 0.05, unit = "native",
+                                     angle = 90, 
+                                     code = 3,
+                                     lwd = 3,
+                                     col = "#0072B2")
+                      }
+                    },
+                    col = "black",
+                    pch = 19,
+                    cex = 1.1,
+                    ylab = NULL,
+                    xlab = NULL,
+                    scales = list(x = list(labels = beta_label),
+                                  y = list(at = seq(-0.1,0.6,0.1),
+                                           limits = c(-0.1,0.6))))
+  plot(VS_plot)
+}
+
+```
+
+# Third Simulation Study
+
+The goal of the third simulation study is to demonstrate the effectiveness of the Bayesian method to adjust the survey weights \citep{Gunawan2020}, implemented in the function `WFPBB()`. 
+
+In this simulation study, we introduce a selection variable $Z$. When a sample is taken from the population, the $Z$-value for a subject in the population determines the probability of selecting that subject into the sample. Specifically, we assume that for each subject, the joint distribution of the selection variable $Z$ and the response variable $\mathbf{Y}$ is 
+\begin{equation}
+	\label{eq:simu1_density}
+	\begin{pmatrix}
+		\mathbf{Y}_{i} \\
+		Z_{i}
+	\end{pmatrix} \sim 
+	ST_{2n_{i}+1}\left[\left(\begin{array}{c}
+		\boldsymbol{\theta}_{i}+b \delta \mathbf{1}_{2 n_{i}} \\
+		\mu_{z}
+	\end{array}\right),\left(\begin{array}{cc}
+		\boldsymbol{\Psi}_{i} & \rho \times \boldsymbol{1}_{2n_{i}} \\
+		\rho \times \boldsymbol{1}_{2n_{i}}^{\top} & \sigma^{2}_{z}
+	\end{array}\right),\left(\begin{array}{c}
+		\delta \boldsymbol{1}_{2n_{i}}\\
+		0
+	\end{array}\right), \nu\right],
+\end{equation}
+where 
+$$
+\boldsymbol{\theta}_{i} = 
+\left(\begin{array}{c}
+	g\left(\mathbf{X}_{i} \boldsymbol{\beta}\right) \\
+	a \times g\left(\mathbf{X}_{i} \boldsymbol{\beta}\right)
+\end{array}\right),
+$$
+$g(\cdot)$ is the same index function introduced in the first simulation study,
+and
+$$
+\boldsymbol{\Psi}_{i} = d^2 \boldsymbol{1}_{2n_{i}} \boldsymbol{1}^{\top}_{2n_{i}} + \sigma^2 \mathbf{I}_{2n_{i}}.
+$$ 
+Marginally, $\mathbf{Y}_{i}$ comes from the ST-GP model defined in \eqref{eq:ST-GP_model} and \eqref{eq:single_index_model_distributional_assumption}. Additionally, to replicate the intrinsic sampling mechanism in real data, we introduce a sampling mechanism here. We assume that $\mathbf{Y}_{i}$ is selected into the sample if and only if $I_{i}  = 1$, where
+\begin{equation}
+	\mathbb{P} \left(I_{i} = 1 \mid \mathbf{Y}_{i}, Z_{i}\right) = \mathbb{P} \left(I_{i} = 1 \mid Z_{i}\right) = \pi_{i} = \operatorname{logistic}\left(\zeta_{0} + \zeta_{1} Z_{i}\right),
+	\label{eq:selection_probability}
+\end{equation}
+with $\operatorname{logistic}\left(\cdot\right)$ denoting the standard logistic function.
+
+## Simulate Data
+
+```{r simu3_simu_data, eval = FALSE}
+set.seed(100)
+# set the population size
+population_N <- 1000
+# group information and the number of nodes
+
+group_info <- c(rep(0,2),
+                rep(1,2),
+                2,3,
+                rep(4,2),
+                5,6)
+
+L <- 50
+output_data <- reg_simulation3(N = population_N,
+                               ni_lambda= 8,
+                               beta = c(rep(1,6),rep(0,4)),
+                               beta_b = 1.5,
+                               dsq = 0.1,
+                               sigmasq = 0.5,
+                               delta = 0.6,
+                               nu = 5.89,
+                               muz = 0,
+                               rho = 36.0,
+                               sigmasq_z = 0.6,
+                               zeta0 = -1.8,
+                               zeta1 = 0.1)
+```
+
+## Use the Gibbs Sampler and the `WFPBB()` Function
+
+Calling `WFPBB()` and `Gibbs_Sampler()` takes around 12 hours in a personal laptop. Users can test the following codes by themselves.
+
+```{r simu3_WFPBB, eval = FALSE}
+N <- length(output_data$y)
+survey_weight <- output_data$survey_weight
+
+# the size of bootstrap is 50
+size_bootstrap <- 50
+output_MCMC <- list(beta = vector("list",size_bootstrap),
+                    beta_b = vector("list",size_bootstrap),
+                    delta = vector("list",size_bootstrap),
+                    dsq = vector("list",size_bootstrap),
+                    sigmasq = vector("list",size_bootstrap),
+                    nu = vector("list",size_bootstrap))
+
+for (j in 1:size_bootstrap) {
+  
+  print(paste0("bootstrap iteration: ", j, "of ", size_bootstrap, "."))
+  
+  condition <- TRUE
+  while (condition) {
+    index_WFPBB <- WFPBB(y = 1:N,
+                         w = survey_weight,
+                         N = population_N,
+                         n = N)
+    
+    y <- output_data$y
+    y <- y[index_WFPBB]
+    X <- output_data$X
+    X <- X[index_WFPBB] 
+    
+    # check full rank condition
+    X_merged <- do.call("rbind",X)
+    X_rank <- Matrix::rankMatrix(X_merged)[1]
+    if (ncol(X_merged) == X_rank) {
+      print("WFPBB procedure is successful.")
+      condition <- FALSE
+    } else {
+      print("WFPBB procedure is unsuccessful (design matrix is not full ranked). Will try again.")
+    }
+    rm(X_merged)
+    rm(X_rank)
+  }
+  
+  GP_MCMC_output <- Gibbs_Sampler(X = X,
+                                  y = y,
+                                  group_info = group_info,
+                                  beta_value = c(rep(1,6),rep(0,4)),
+                                  beta_prior_variance = 10,
+                                  beta_b_value = 1.5,
+                                  beta_lambdasq_value = rep(1.0,max(group_info)),
+                                  beta_tausq_value = 1,
+                                  xi_value = abs(rnorm(n = L + 1)),
+                                  xi_lengthscale_value = 1.0,
+                                  xi_tausq_value = 1.0,
+                                  g_func_type = "GP",
+                                  dsq_value = 0.1,
+                                  sigmasq_value = 0.5,
+                                  delta_value = 0.6,
+                                  nu_value = 5.89,
+                                  U_value = abs(rnorm(N)),
+                                  S_value = abs(rnorm(N)),
+                                  loglik_type = "skewT",
+                                  gof_K = 10,
+                                  gof_L = 5,
+                                  iter_warmup = 5000,
+                                  iter_sampling = 10000,
+                                  verbatim = TRUE,
+                                  update = 5000,
+                                  incremental_output = FALSE,
+                                  incremental_output_filename = NULL,
+                                  incremental_output_update = 1e6,
+                                  n_core = 1)
+  
+  output_MCMC$beta[[j]] <- GP_MCMC_output$beta_output
+  output_MCMC$beta_b[[j]] <- GP_MCMC_output$beta_b_output
+  output_MCMC$delta[[j]] <- GP_MCMC_output$delta_output
+  output_MCMC$dsq[[j]] <- GP_MCMC_output$dsq_output
+  output_MCMC$sigmasq[[j]] <- GP_MCMC_output$sigmasq_output
+  output_MCMC$nu[[j]] <- GP_MCMC_output$nu_output
+}
+```
+
+## Posterior Inference
+
+```{r simu3_post_inf, eval = FALSE}
+# chunk not evaluated.
+if (require(posterior)) {
+  df_beta <- do.call("rbind",output_MCMC$beta)
+  colnames(df_beta) <- paste0("beta",1:10)
+  df_beta_summary <- summarise_draws(as_draws(df_beta), 
+                                     mean, 
+                                     ~quantile(.x, probs = c(0.025, 1-0.025)))
+  print(df_beta_summary)
+}
+```
+
+\appendix
+
+\section{Skewed Distributions}  \label{sec:skewed_distributions}
+
+We introduce the definition of the ST distribution by first explaining the construction of the SN distribution. The construction of the SN distribution begins with a linear combination of two \emph{independent} normal distributions. A random vector $\mathbf{Y}$ follows a skew-normal (SN) distribution with a $p\times 1$ location vector $\boldsymbol{\mu}$, a $p\times p$ scale matrix $\boldsymbol{\Omega}$, and a $p\times 1$ skewness vector $\boldsymbol{\delta}$, denoted as $\mathbf{Y} \sim \text{SN}_{p} \left(\boldsymbol{\mu}, \boldsymbol{\Omega}, \boldsymbol{\delta} \right)$, if it can be expressed as:
+\begin{equation}
+	\mathbf{Y} = \boldsymbol{\mu} + \boldsymbol{\delta} | X_{0} | + \mathbf{X}_{1},
+	\label{eq:SN_stochastic_representation}
+\end{equation}
+where $X_{0}$ follows a univariate standard normal distribution, and $\mathbf{X}_{1}$ follows a multivariate normal distribution with zero mean and a covariance matrix $\boldsymbol{\Omega}$. The random variable that follows the truncated normal distribution, $|X_{0}|$, along with the skewness vector $\boldsymbol{\delta}$, brings skewness into the SN distribution. 
+
+By introducing one more latent variable, denoted as $U$, which is independent of $X_{0}$ and $\mathbf{X}_{1}$ and follows a Gamma distribution with shape and rate parameters both equal to $\nu/2$, i.e., $U \sim \text{Gamma} \left(\nu/2,\nu/2\right)$, where its density function is proportional to $u^{0.5\nu - 1} \exp\left(-0.5\nu u\right)$, we can construct the ST distribution as follows:
+\begin{equation}
+	\mathbf{Y} = \boldsymbol{\mu} + U^{-1/2} \left(\boldsymbol{\delta} | X_{0} | + \mathbf{X}_{1}\right),
+	\label{eq:ST_stochastic_representation}
+\end{equation}
+which is denoted as $\mathbf{Y} \sim \text{ST}_{p} \left(\boldsymbol{\mu},\boldsymbol{\Omega},\boldsymbol{\delta},\nu\right)$. Adding the new latent variable $U$ introduces heavy tail and high kurtosis features into the ST distribution.
+
+The stochastic representations of the ST and SN distributions in \eqref{eq:SN_stochastic_representation} and \eqref{eq:ST_stochastic_representation} are not only useful for sampling from the ST/SN distributions but also imply the relationship between the ST distribution and the SN distribution. As the degree of freedom parameter $\nu$ approaches infinity, $U$ converges to $1$ in probability, and therefore, the ST distribution converges to the SN distribution. Additionally, \eqref{eq:SN_stochastic_representation} and \eqref{eq:ST_stochastic_representation} imply that the normal distribution is a special case of the SN distribution, and that both the normal distribution and the Student-$t$ distribution are special cases of the ST distribution. With the shape vector $\boldsymbol{\delta}$ set as a vector of zeros, the random vector defined in \eqref{eq:ST_stochastic_representation} follows a multivariate Student-$t$ distribution with the degree of freedom parameter $\nu$, while the random vector defined in \eqref{eq:SN_stochastic_representation} follows a multivariate normal distribution.
+
+Finally, the stochastic representation of the ST distribution in \eqref{eq:ST_stochastic_representation} also implies an equivalent hierarchical representation:
+\begin{equation}
+	\begin{aligned}
+		\mathbf{Y} \mid S, U &\sim \mathcal{N}_{p}\left(\boldsymbol{\mu} + u^{-1/2} s \boldsymbol{\delta}, u^{-1} \boldsymbol{\Omega}\right), \\
+		S &\sim \mathcal{N}^{+} \left(0, 1\right),\\
+		U &\sim \operatorname{Gamma}\left(\nu/2, \nu/2\right).
+	\end{aligned}
+	\label{eq:ST_hierarchical_representation}
+\end{equation}
+Integrating out two latent variables, $S$ and $U$, we obtain the density function of the ST distribution as:
+\begin{equation}
+	f_{\mathbf{Y}}(\mathbf{Y}) = 2 t_{p}(\mathbf{Y} \mid \boldsymbol{\mu}, \boldsymbol{\Sigma}, \nu) T\left(\boldsymbol{\delta}^{\top} \boldsymbol{\Sigma}^{-1}(\mathbf{Y}-\boldsymbol{\mu}) \sqrt{\frac{\nu+p}{\nu+d(\mathbf{Y})}} \mid 0, \Lambda, \nu+p\right),
+	\label{eq:ST_pdf}
+\end{equation}
+where $t_{p}$ represents the density function of a $p$-dimensional multivariate Student-$t$ distribution, $T$ represents the cumulative distribution function of a univariate Student-$t$ distribution. Additional $\boldsymbol{\Sigma}$ and $\boldsymbol{\Lambda}$ are given as follows:
+$$
+\boldsymbol{\Sigma} = \boldsymbol{\Omega} + \boldsymbol{\delta} \boldsymbol{\delta}^{\top},
+$$
+$$
+\Lambda = 1 - \boldsymbol{\delta}^{\top} \boldsymbol{\Sigma}^{-1} \boldsymbol{\delta}.
+$$
+Furthermore, $d(\mathbf{Y})$ is defined as:
+$$
+d(\mathbf{Y}) = (\mathbf{Y} - \boldsymbol{\mu})^{\top} \boldsymbol{\Sigma}^{-1} (\mathbf{Y} - \boldsymbol{\mu}).
+$$
+Both representations of the ST distribution in \eqref{eq:ST_stochastic_representation} and \eqref{eq:ST_hierarchical_representation}, along with its density function in \eqref{eq:ST_pdf}, are utilized in the tailored Gibbs sampler.
+
+A notable feature of the ST distribution is its closure under linear transformation, as demonstrated in Proposition 5 of \citet{schumacher2021canonical}. That is, if $\mathbf{Y} \sim \operatorname{ST}_{p}\left(\boldsymbol{\mu},\boldsymbol{\Omega},\boldsymbol{\delta},\nu\right)$ then
+\begin{equation}
+	\mathbf{AY} + \mathbf{b} \sim \operatorname{ST}_{m}\left(\mathbf{A}\boldsymbol{\mu} + \mathbf{b},
+	\mathbf{A}\boldsymbol{\Omega}\mathbf{A}^{\top},\mathbf{A}\boldsymbol{\delta},\nu\right),
+	\label{eq:ST_linear_transformation}
+\end{equation}
+where $\mathbf{A}$ is a $m\times p$ matrix and $\mathbf{b}$ is a vector of length $m$.
+
+\section{The Hierarchical Representation} \label{sec:the_hierarchical_representation}
+Using Proposition 5 of \citet{schumacher2021canonical}, we have
+\begin{equation}
+	\mathbf{Y}_i \sim \operatorname{ST}_{2n_{i}}\left(\boldsymbol{\theta}_i+ h(\nu) \delta \boldsymbol{1}_{2n_{i}}, \boldsymbol{\Psi}_i, \delta \boldsymbol{1}_{2n_{i}}, \nu\right),
+\end{equation}
+where
+$$
+\boldsymbol{\theta}_i = 
+\left(\begin{array}{c}
+	g\left(\mathbf{X}_i \boldsymbol{\beta}\right) \\
+	a \times g\left(\mathbf{X}_i \boldsymbol{\beta}\right)
+\end{array}\right)
+$$
+and
+$$\boldsymbol{\Psi}_i = d^2 \boldsymbol{1}_{2n_{i}} \boldsymbol{1}^{\top}_{2n_i} + \sigma^2 \mathbf{I}_{2n_i \times 2n_i}$$ 
+represents a covariance matrix characterized by a compound symmetry structure, with readily available closed-form expressions for its inverse and determinant.
+
+From Proposition 6 of \citet{schumacher2021canonical}, we have the following stochastic representation,
+\begin{equation}
+	\begin{aligned}
+		\mathbf{Y}_i \mid \cdot &\sim \mathcal{N}_{2n_i} \left( \boldsymbol{\theta}_i + h(\nu) \delta \boldsymbol{1}_{2n_{i}} + \delta s_i \boldsymbol{1}_{2n_{i}}, u_{i}^{-1} \boldsymbol{\Psi}_i \right) \\
+		S_i \mid \cdot &\sim \mathcal{N}^{+} \left( 0, u_{i}^{-1}\right) \\
+		U_i &\sim \operatorname{Gamma} \left(\nu/2 , \nu/2 \right), \quad i = 1,\dots,N.
+	\end{aligned}
+	\label{eq:stochastic_eq1}
+\end{equation}
+Here, $\mathcal{N}^{+} \left(0, u_i^{-1}\right)$ represents the half-normal distribution with a location parameter of 0 and a scale parameter of $\sqrt{u_i^{-1}}$.
+
+Last, \eqref{eq:stochastic_eq1} can also be represented in the following way.
+\begin{equation}
+	\begin{aligned}
+		\mathbf{Y}_i \mid \cdot &\sim \mathcal{N}_{2n_i} \left( \boldsymbol{\theta}_i + \boldsymbol{1}_{2n_{i}}b_i, u^{-1}_{i} \sigma^2 \mathbf{I}_{2n_{i}}\right) \\
+		b_i \mid \cdot &\sim \mathcal{N}\left(\delta \left( h(\nu) + s_i\right), u^{-1}_{i} d^2 \right) \\
+		S_i \mid \cdot &\sim \mathcal{N}^{+} \left( 0, u_{i}^{-1}\right) \\
+		U_i &\sim \operatorname{Gamma} \left(\nu/2 , \nu/2 \right), \quad i = 1,\dots,N.
+	\end{aligned}
+	\label{eq:stochastic_eq2}
+\end{equation}
+
+With conjugate priors in Section \ref{sec:Prior_Elicitation}, utilizing \eqref{eq:stochastic_eq1}, we can derive the updating equations for $\beta_0$, $\delta$, $S_i$, and $U_i$. To update $\boldsymbol{\xi}$, we can employ the exact Hamiltonian algorithm, as described by \citet{pakman2014exact}. Leveraging Equation \eqref{eq:stochastic_eq2}, we can establish the updating equations for $b_i$, $\sigma^2$, and $d^2$. The remaining parameters, which include $\boldsymbol{\beta}$, $\nu$, as well as the hyperparameters associated with the constrained GP prior, will be updated using the elliptical slice sampler algorithm.
+
+\section{The Gibbs Sampler} \label{sec:Gibbs}
+To simplify notation, let 
+$$g\left(\mathbf{X}_{i} \boldsymbol{\beta}\right) = g_{i}.$$
+\subsection*{Update \texorpdfstring{$a$}{a}}
+The prior for $a$ is
+$$
+a \sim \mathcal{N} \left(0, \sigma^2_{a} \right).
+$$
+Let
+$$
+\boldsymbol{\Omega}_{i,a} = u_{i}^{-1} \sigma^{2} \mathbf{I}_{n_{i}},
+$$
+\begin{equation}
+	\mathbf{Y}_{i,a}^{\star} = \mathbf{Y}_{i}^{C} - \boldsymbol{1}_{n_i} b_{i}.
+\end{equation}
+After simple algebra,
+\begin{equation}
+	a \mid \cdot \sim \mathcal{N}\left(\frac{\sum_{i=1}^N g_{i}^{\top} \boldsymbol{\Omega}_{i, a}^{-1} \mathbf{Y}_{i, a}^{\star}}{\sigma_{a}^{-2}+\sum_{i=1}^N g_{i}^{\top} \boldsymbol{\Omega}_{i, a}^{-1} g_{i}}, \frac{1}{\sigma_{a}^{-2}+\sum_{i=1}^N g_{i}^{\top} \boldsymbol{\Omega}_{i, a}^{-1} g_{i}}\right).
+\end{equation}
+
+\subsection*{Update \texorpdfstring{$\boldsymbol{\xi}$}{xi}}
+
+Given hyperparameters $\rho_{1}^{2}$ and $\rho_{2}$, the distribution for $\boldsymbol{\xi} = \left(\xi_0, \dots, \xi_{L}\right)^{\top}$ is
+$$
+\boldsymbol{\xi} \mid \cdot \sim \mathcal{N}^{+}_{L+1} \left(\boldsymbol{0}_{L + 1}, \boldsymbol{K}\right).
+$$
+Let 
+$$
+\mathbf{Y}_{i,\boldsymbol{\xi}}^{\star}=
+\left(\begin{array}{c}
+	\mathbf{Y}_i^P - \boldsymbol{1}_{n_i \times 1} \left( h(\nu) \delta + s_i \delta\right)\\
+	\left(\mathbf{Y}_i^C - \boldsymbol{1}_{n_i \times 1} \left( h(\nu) \delta + s_i \delta\right)\right)/a
+\end{array}\right),
+$$
+$$
+\boldsymbol{\Omega}_{i,\boldsymbol{\xi}} = 
+\left(\begin{array}{cc}
+	\mathbf{I}_{n_i} & \mathbf{0}_{n_i} \\
+	\mathbf{0}_{n_i} & a^{-1} \mathbf{I}_{n_i}
+\end{array}\right) u^{-1}_i \boldsymbol{\Psi}_i\left(\begin{array}{cc}
+	\mathbf{I}_{n_i} & \mathbf{0}_{n_i} \\
+	\mathbf{0}_{n_i} & a^{-1} \mathbf{I}_{n_i}
+\end{array}\right),
+$$
+and
+$$
+\boldsymbol{\Phi}_i=
+\left(\begin{array}{c}
+	\phi_0\left(\mathbf{X}_i \boldsymbol{\beta}\right), \ldots, \phi_L\left(\mathbf{X}_i \boldsymbol{\beta}\right) \\
+	\phi_0\left(\mathbf{X}_i \boldsymbol{\beta}\right), \ldots, \phi_L\left(\mathbf{X}_i \boldsymbol{\beta}\right)
+\end{array}\right).
+$$
+After simple algebra,
+$$
+\boldsymbol{\xi} \mid \cdot \sim \mathcal{N}_{L+1}^{+} \left( \left(\boldsymbol{K}^{-1} + \sum_{i = 1}^{N} \boldsymbol{\Phi}_i^{\top} \boldsymbol{\Omega}_{i,\boldsymbol{\xi}}^{-1} \boldsymbol{\Phi}_i\right)^{-1} \left(\sum_{i = 1}^{N} \boldsymbol{\Phi}_i^{\top} \boldsymbol{\Omega}_{i,\boldsymbol{\xi}}^{-1} \mathbf{Y}_{i, \boldsymbol{\xi}}^{\star}\right),
+\left(\boldsymbol{K}^{-1} + \sum_{i = 1}^{N} \boldsymbol{\Phi}_i^{\top} \boldsymbol{\Omega}_{i,\boldsymbol{\xi}}^{-1} \boldsymbol{\Phi}_i\right)^{-1}\right).
+$$
+
+\subsection*{Update \texorpdfstring{$\delta$}{delta}}
+
+The prior for $\delta$ is
+$$
+\delta \sim \mathcal{N}\left(0, \sigma^{2}_{\delta}\right).
+$$
+Let
+$$
+\mathbf{Y}^{\star}_{i,\delta} = 
+\left(\begin{array}{c}
+	\mathbf{Y}_i^P \\
+	\mathbf{Y}_i^C
+\end{array}\right) -
+\left(\begin{array}{c}
+	g_{i} \\
+	a g_{i}
+\end{array}\right),
+$$
+and
+$$
+\boldsymbol{\Omega}_{i,\delta} = u^{-1}_{i} \boldsymbol{\Psi}_{i}.
+$$
+After simple algebra,
+$$
+\delta \mid \cdot \sim \mathcal{N} \left(\frac{\sum_{i=1}^{N} \left(h(\nu) + s_i\right) \boldsymbol{1}_{2n_i}^{\top} \boldsymbol{\Omega}_{i,\delta}^{-1} \mathbf{Y}_{i, \delta}^{\star}}{\sigma^{-2}_{\delta} + \sum_{i=1}^{N} \left(h(\nu) + s_i\right)^{2}\boldsymbol{1}^{\top}_{2n_i} \boldsymbol{\Omega}_{i,\delta}^{-1} \boldsymbol{1}_{2n_i}},
+\frac{1}{\sigma^{-2}_{\delta} + \sum_{i=1}^{N} \left(h(\nu) + s_i\right)^{2}\boldsymbol{1}_{2n_i}^{\top} \boldsymbol{\Omega}_{i,\delta}^{-1} \boldsymbol{1}_{2n_i}}\right).
+$$
+
+\subsection*{Update \texorpdfstring{$S_i$}{Si}}
+
+Let 
+$$
+\mathbf{Y}^{\star}_{i,S_i} = \mathbf{Y}_{i} - \boldsymbol{\theta}_i - h(\nu) \delta \boldsymbol{1}_{2n_{i}},
+$$
+and 
+$$
+\boldsymbol{\Omega}_{i,S_i} = u_{i}^{-1}\boldsymbol{\Psi}_i.
+$$
+After simple algebra,
+$$
+S_{i} \mid \cdot \sim \mathcal{N}^{+} \left(\frac{\delta \boldsymbol{1}_{1\times 2n_i} \boldsymbol{\Omega}_{i}^{-1} \mathbf{Y}_{i}^{\star}}{u_{i} + \delta^2 \boldsymbol{1}_{1 \times 2 n_i} \boldsymbol{\Omega}_{i, \delta}^{-1} \boldsymbol{1}_{2 n_i \times 1}}, \frac{1}{u_{i} + \delta^2 \boldsymbol{1}_{1 \times 2 n_i} \boldsymbol{\Omega}_{i, \delta}^{-1} \boldsymbol{1}_{2 n_i \times 1}}\right).
+$$
+
+\subsection*{Update \texorpdfstring{$U_i$}{Ui}}
+
+Let 
+$$
+\mathbf{Y}^{\star}_{i,U_{i}} = \mathbf{Y}_{i} - \boldsymbol{\theta}_{i} - h(\nu) \delta \boldsymbol{1}_{2n_{i} \times 1} - \delta s_i \boldsymbol{1}_{2n_{i} \times 1}.
+$$
+$$
+U_{i} \mid \cdot \sim \operatorname{Gamma} \left(0.5\left(2n_{i} + \nu + 1\right), 0.5 \left({\mathbf{Y}^{\star}_{i,U_{i}}}^{\top} \boldsymbol{\Psi}_{i}^{-1} \mathbf{Y}^{\star}_{i,U_{i}} + s^{2}_{i} + \nu\right)\right).
+$$
+
+\subsection*{Update \texorpdfstring{$b_i$}{bi}}
+Let 
+$$
+\mathbf{Y}^{\star}_{i,b_{i}} = \mathbf{Y}_{i} - \boldsymbol{\theta}_{i}.
+$$
+$$
+b_{i} \mid \cdot \sim \mathcal{N}\left(\frac{\sigma^{-2}\left(\boldsymbol{1}^{\top}_{n_{i}} \mathbf{Y}^{\star}_{i,b_{i}}\right) + \delta\left(h(\nu) + s_i\right)d^{-2}}{2 n_{i}\sigma^{-2} + d^{-2}}, \frac{1}{2 n_{i}u_{i}\sigma^{-2} + u_{i}d^{-2}}\right).
+$$
+
+\subsection*{Update \texorpdfstring{$\sigma^{2}$}{sigmasq}}
+
+The prior for $\sigma^{2}$ is
+$$
+\sigma^{2} \sim \text{Inverse Gamma} \left(a_{\sigma^2}, b_{\sigma^2}\right).
+$$
+Let 
+$$
+\mathbf{Y}^{\star}_{i,\sigma^2} = \mathbf{Y}_{i} - \boldsymbol{\theta}_{i} - \boldsymbol{1}_{2n_{i}} b_{i}.
+$$
+$$
+\sigma^2 \mid \cdot \sim \text{Inverse Gamma} \left(a_{\sigma^2} + \sum_{i=1}^{N} n_{i}, b_{\sigma^2} + 0.5 \sum_{i=1}^{N} u_{i}\left({\mathbf{Y}^{\star}_{i,\sigma^2}}^{\top}\mathbf{Y}^{\star}_{i,\sigma^2}\right)\right).
+$$
+
+\subsection*{Update \texorpdfstring{$d^{2}$}{dsq}}
+The prior for $d^{2}$ is
+$$
+d^{2} \sim \text{Inverse Gamma} \left(a_{d^2}, b_{d^2}\right).
+$$
+$$
+d^2 \mid \cdot \sim \text{Inverse Gamma} \left(0.5N + a_{d^{2}}, b_{d^{2}} + 0.5\sum_{i=1}^{N} u_{i}\left(b_{i} - \delta\left(h(\nu) + s_{i}\right)\right)^2\right).
+$$
+
+\clearpage
+
+\bibliographystyle{apalike}
+\bibliography{ref}

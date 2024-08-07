@@ -1,0 +1,8 @@
+\documentclass{article}
+\usepackage{pdfpages}
+%\VignetteIndexEntry{Robust Statistical Modeling for Quantifying Periodontal Disease: A Single Index Mixed-Effects Approach with Skewed Random Effects and Heavy-Tailed Residuals}
+%\VignetteEncoding{UTF-8}
+
+\begin{document}
+\includepdf[pages=-, fitpaper=true]{MSIMST-vignette.pdf}
+\end{document}

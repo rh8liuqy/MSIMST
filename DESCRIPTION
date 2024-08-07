@@ -1,0 +1,27 @@
+Package: MSIMST
+Type: Package
+Title: Bayesian Monotonic Single-Index Regression Model With the Skew-T
+        Likelihood
+Version: 1.0
+Date: 2024-07-31
+Authors@R: c(
+    person("Qingyang", "Liu", email = "rh8liuqy@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0003-3265-6330")),
+    person("Debdeep", "Pati", email = "debdeep@stat.tamu.edu", role = c("aut")),
+    person("Dipankar", "Bandyopadhyay", email = "dbandyop@vcu.edu", role = c("aut")))
+Description: A Bayesian monotonic single-index mixed-effect model incorporating a multivariate skew-t likelihood with survey weights adjustments. This package includes a simulation program and the associated Gibbs sampler. The single-index function is modeled as a monotonic increasing function, with a tailored Gaussian process prior to ensure accurate estimation. Random effects are assumed to follow the canonical skew-t distribution, while residuals are modeled using the multivariate Student-t distribution. Additionally, the package provides Bayesian adjustment for survey weight information.
+License: GPL (>= 3)
+Imports: MASS (>= 7.3-58.4), Rcpp (>= 1.0.12), mvtnorm (>= 1.2-4),
+        fields (>= 15.2), parallel (>= 4.3.0), truncnorm (>= 1.0-9),
+        Rdpack (>= 2.6)
+LinkingTo: Rcpp, RcppArmadillo
+RoxygenNote: 7.3.1
+Encoding: UTF-8
+Suggests: lattice (>= 0.21-8), HDInterval (>= 0.2.4), latex2exp (>=
+        0.9.6), posterior (>= 1.5.0)
+RdMacros: Rdpack
+NeedsCompilation: yes
+Packaged: 2024-08-07 17:50:22 UTC; kevin_liu
+Author: Qingyang Liu [aut, cre] (<https://orcid.org/0000-0003-3265-6330>),
+  Debdeep Pati [aut],
+  Dipankar Bandyopadhyay [aut]
+Maintainer: Qingyang Liu <rh8liuqy@gmail.com>
