@@ -11,8 +11,7 @@ The goal of MSIMST is to provide a Bayesian monotonic single-index mixed-effect 
 You can install the development version of MSIMST like so:
 
 ``` r
-devtools::install_github(repo = "https://github.com/rh8liuqy/MSIMST",
-                         vignettes = TRUE)
+devtools::install_github(repo = "https://github.com/rh8liuqy/MSIMST")
 ```
 
 ## Vignette
