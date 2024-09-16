@@ -4,7 +4,7 @@
 \alias{WFPBB}
 \title{Weighted Finite Population Bayesian Bootstrap}
 \usage{
-WFPBB(y, w, N, n)
+WFPBB(y, w, N, n, verbatim)
 }
 \arguments{
 \item{y}{The index of survey data.}
@@ -14,6 +14,8 @@ WFPBB(y, w, N, n)
 \item{N}{The population size.}
 
 \item{n}{The sample size.}
+
+\item{verbatim}{TRUE/FALSE. This variable decides whether print the progress information to the console.}
 }
 \value{
 The re-sampled index of survey data.
@@ -47,7 +49,8 @@ n <- length(y)
 index_WFPBB <- WFPBB(y = 1:n,
                      w = survey_weight,
                      N = population_N,
-                     n = n)
+                     n = n,
+                     verbatim = FALSE)
 print(head(index_WFPBB))
 
 }

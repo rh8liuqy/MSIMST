@@ -4,6 +4,7 @@
 #' @param w Survey weights. The summation of survey weights should equal the population size
 #' @param N The population size.
 #' @param n The sample size.
+#' @param verbatim TRUE/FALSE. This variable decides whether print the progress information to the console.
 #'
 #' @return The re-sampled index of survey data.
 #' @description
@@ -37,7 +38,8 @@
 #' index_WFPBB <- WFPBB(y = 1:n,
 #'                      w = survey_weight,
 #'                      N = population_N,
-#'                      n = n)
+#'                      n = n,
+#'                      verbatim = FALSE)
 #' print(head(index_WFPBB))
 #' 
 #' @export
@@ -45,7 +47,8 @@
 WFPBB <- function(y,
                   w,
                   N,
-                  n) {
+                  n,
+                  verbatim) {
   if (length(y) != n) {
     stop("length(y) must equal n !")
   }
@@ -62,8 +65,8 @@ WFPBB <- function(y,
   output <- numeric(N - n)
   for (k in 1:(N-n)) {
     # print the log information if the population size is large
-    if (k %% 10000 == 1) {
-      print(paste0("WFPBB procedure || iteration: ", k, " of ", N - n))
+    if (k %% 10000 == 1 & verbatim) {
+      message(paste0("WFPBB procedure || iteration: ", k, " of ", N - n))
     }
     probk <- (w-1+l*Nstar)/(N-n+(k-1)*Nstar)
     ykstar <- sample(x = y, size = 1, replace = FALSE, prob = probk)

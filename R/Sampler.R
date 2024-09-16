@@ -121,8 +121,8 @@ Gibbs_Sampler <- function(X,
   # In the Windows operating system, n_core must be 1
   if (.Platform$OS.type == "windows") {
     n_core <- 1
-    print("Parallel computing is not currently support in the Windows operating system.")
-    print("n_core is resetted to be 1.")
+    warning("Parallel computing is not currently support in the Windows operating system.")
+    warning("n_core is resetted to be 1.")
   }
   # check the incremental output filename
   if (incremental_output & is.null(incremental_output_filename)) {
@@ -148,8 +148,8 @@ Gibbs_Sampler <- function(X,
   
   # ensure nu_value is larger than 2
   if (nu_value < 2) {
-    print("nu_value must be larger than 2!")
-    print("reset nu_value to be 2 + 1e-6.")
+    warning("nu_value must be larger than 2!")
+    warning("reset nu_value to be 2 + 1e-6.")
     nu_value <- 2 + 1e-6
   }
   
@@ -239,7 +239,7 @@ Gibbs_Sampler <- function(X,
   
   for (i in 1:iter_total) {
     if (verbatim & i%%update == 0) {
-      print(paste0("i:",i))
+      message(paste0("i:",i))
     }
     
     # update S ----------------------------------------------------------------

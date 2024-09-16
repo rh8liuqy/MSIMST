@@ -6,7 +6,14 @@
 \alias{MSIMST}
 \title{The 'MSIMST' package.}
 \description{
-A Bayesian monotonic single-index mixed-effect model incorporating a multivariate skew-t likelihood with survey weights adjustments. This package includes a simulation program and the associated Gibbs sampler. The single-index function is modeled as a monotonic increasing function, with a tailored Gaussian process prior to ensure accurate estimation. Random effects are assumed to follow the canonical skew-t distribution, while residuals are modeled using the multivariate Student-t distribution. Additionally, the package provides Bayesian adjustment for survey weight information.
+Incorporates a Bayesian monotonic single-index mixed-effect model with a multivariate skew-t likelihood, specifically designed to handle survey weights adjustments. Features include a simulation program and an associated Gibbs sampler for model estimation. The single-index function is constrained to be monotonic increasing, utilizing a customized Gaussian process prior for precise estimation. The model assumes random effects follow a canonical skew-t distribution, while residuals are represented by a multivariate Student-t distribution. Offers robust Bayesian adjustments to integrate survey weight information effectively.
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/rh8liuqy/MSIMST}
+}
+
 }
 \author{
 \strong{Maintainer}: Qingyang Liu \email{rh8liuqy@gmail.com} (\href{https://orcid.org/0000-0003-3265-6330}{ORCID})
